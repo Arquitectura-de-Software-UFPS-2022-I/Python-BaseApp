@@ -6,5 +6,5 @@ setup(
     description='Base application for signature',
     author='Python-Group-UFPS',
     license='MIT',
-    install_requires=['sqlalchemy' 'pymysql''pymupdf'],
+    install_requires=['sqlalchemy' ,'pymysql','pymupdf'],
 )

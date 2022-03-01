@@ -63,7 +63,7 @@ while option != '0' :
         num_page = int(input('Num Page: '))
         register_request_signature_user(request_id,user_id,pos_x,pos_y,num_page)
 
-    if option == '7':
+    if option == '7' :
         
         user_id = int(input('User ID: '))
         request_signature = get_request_signature_by_user(user_id)
