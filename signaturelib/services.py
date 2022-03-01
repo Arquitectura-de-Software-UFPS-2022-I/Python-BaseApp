@@ -1,6 +1,6 @@
 import os
 from signaturelib.model import loadSession,User,File,Signature_request,Signature_request_user
-import io, fitz , json, smtplib, datetime
+import io, fitz , json, smtplib, datetime, requests
 
 session = loadSession()
 
@@ -14,7 +14,17 @@ def register_user(name,email,username,password):
 
 
 def validate_signature(image):
-    url = ""
+    url = "http://52.240.59.172:8000/signature-recognition/"
+    
+    payload = {'image': image}
+    headers={"Content-Type":"application/json"}
+    response = requests.post(url, json=json.dumps(payload), headers=headers)
+    print(response.text)
+    if response.status_code == 200:
+        print(response.content)
+        return True    
+    else:
+        return False
 
 def list_users():
     users = session.query(User).all()

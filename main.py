@@ -1,5 +1,5 @@
 
-from signaturelib.services import approve_signature, get_file, get_file_pdf, get_request_signature_by_user, list_users, register_request_signature_user,register_user,get_user,insert_signature,insert_pdf,register_request_signature
+from signaturelib.services import validate_signature, approve_signature, get_file, get_file_pdf, get_request_signature_by_user, list_users, register_request_signature_user,register_user,get_user,insert_signature,insert_pdf,register_request_signature
 import os,time
 
 option = '5'
@@ -15,6 +15,7 @@ while option != '0' :
     6. Solicitar Firma 
     7. Generar PDF 
     8. Aprobar Firma
+    9.
 
     ''')
 
@@ -44,6 +45,7 @@ while option != '0' :
     if option == '4':
         doc = input('Document path: ')
         image = open(doc,'rb')
+        validate_signature(input("BASE 64:"))
         print(type(image))        
         user_id = int(input('User ID: '))
         insert_signature(user_id,image)
