@@ -1,8 +1,11 @@
-import os
-from signaturelib.model import loadSession,User,File,Signature_request,Signature_request_user
+from email.encoders import encode_base64
+import os, base64
+from typing import List
+from signaturelib.model import SessionBD,User,File,Signature_request,Signature_request_user
 import io, fitz , json, smtplib, datetime, requests
 
-session = loadSession()
+sessionbd = SessionBD()
+session = sessionbd.get_session()
 
 def register_user(name: str, email: str, username: str, password: str) -> User:
     """
@@ -15,14 +18,14 @@ def register_user(name: str, email: str, username: str, password: str) -> User:
 
     :return: User object
     """
-    user = User(name=name,email=email,username=username,password=password)
+    user = User(name=name, email=email, username=username, password=password)
     session.add(user)
     session.commit()
     
     return user
 
 
-def validate_signature(image) -> bool:
+def validate_signature(image: str) -> bool:
     """
     Valida si la imagen efectivamente corresponde a una firma
 
@@ -33,7 +36,11 @@ def validate_signature(image) -> bool:
 
     url = "http://52.240.59.172:8000/signature-recognition/"
 
-    payload = {"image": open(image, 'rb').read()}
+    with open(image, "rb") as image_file:
+        encoded_string = base64.b64encode(image_file.read())
+
+    payload = {"image": encoded_string}
+    
     response = requests.post(url, data=payload)
 
     if response.status_code == 200:
@@ -41,7 +48,7 @@ def validate_signature(image) -> bool:
 
     return False
 
-def list_users() -> list:
+def list_users() -> list[User]:
     """
     Lista los usuario {table_name=User} registrados en la base de datos
 
@@ -83,7 +90,7 @@ def register_request_signature(user_id: int, name_file: str, file: bytes, subjec
 
     return request_signature
 
-def get_request_signature_by_user(user_id: int) -> list:
+def get_request_signature_by_user(user_id: int) -> list[Signature_request]:
     """
     Obtiene la lista de solicitudes por documento {table_name=Signature_request} 
     que un usuario ha realizado
@@ -119,7 +126,7 @@ def register_request_signature_user(request_id: int, user_id: int, pos_x: int, p
     return signature_request_user
 
 
-def list_files() -> list:
+def list_files() -> list[File]:
     """
     Lista los archivos {table_name=File} registrados en la base de datos
 
@@ -255,15 +262,13 @@ def get_file_pdf(request_id: int) -> bytes:
 
     file_handle = fitz.open('temp.pdf')
     for request in request_users_signature:
-
-        user = get_user(request.user_id)
-        signature = get_file(user.signature_id).file
+        signature = request.user.signature.file
 
         with open('signature.png', 'wb') as outfile:
             outfile.write(signature)
         signature = open("signature.png", "rb").read()
 
-        image_rectangle = fitz.Rect(20, 20,100,100)
+        image_rectangle = fitz.Rect(20, 20, 200, 200)
         os.remove('signature.png')
         num_page = file_handle[request.num_page-1]
         num_page.insert_image(image_rectangle, stream=signature)
@@ -281,3 +286,34 @@ def get_file_pdf(request_id: int) -> bytes:
 
     return doc_bytes
     
+def get_list_signature_request_user_by_user_id_and_signed(user_id: int, signed: bool) -> List[Signature_request_user]:
+    """
+    Lista las solicitudes de firmas que le han solicitado al usuario
+
+    :user_id: int, id del usuario al cual le han solicitado firmas
+    :signed: bool, indica si desea buscar aprobadas (True) o pendientes (False)
+
+    :return: [Signature_request_user]
+
+    Nota:
+        Las pendientes son el requerimiento 9
+        Las aprobadas son el requerimiento 12, es decir el historico
+    """
+    signature_request_users = session.query(Signature_request_user).filter_by(user_id=user_id, signed=1 if signed else 0).all()
+    return signature_request_users
+
+def get_list_signature_request_user_by_request_id_and_signed(request_id: int, signed: bool) -> List[Signature_request_user]:
+    """
+    Lista las solicitudes de firmas asociadas a una solicitud
+
+    :request_id: int, id de la solicitud por la cual se desea buscar firmas aprobadas o pendientes
+    :signed: bool, indica si desea buscar aprobadas (True) o pendientes (False)
+
+    :return: [Signature_request_user]
+
+    Nota:
+        Las pendientes son el requerimiento 10
+        Las aprobadas son el requerimiento 11
+    """
+    signature_request_users = session.query(Signature_request_user).filter_by(request_id=request_id, signed=1 if signed else 0).all()
+    return signature_request_users

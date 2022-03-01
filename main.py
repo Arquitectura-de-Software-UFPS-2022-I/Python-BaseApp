@@ -1,5 +1,5 @@
 
-from signaturelib.services import get_user_login, validate_signature, approve_signature, get_file_pdf, get_request_signature_by_user, list_users, register_request_signature_user,register_user,get_user,insert_signature,register_request_signature
+from signaturelib.services import get_list_signature_request_user_by_request_id_and_signed, get_list_signature_request_user_by_user_id_and_signed, get_signature_request, get_user_login, validate_signature, approve_signature, get_file_pdf, get_request_signature_by_user, list_users, register_request_signature_user,register_user,get_user,insert_signature,register_request_signature
 import os,time
 
 option = '5'
@@ -15,8 +15,11 @@ while option != '0' :
     6. Solicitar Firma 
     7. Generar PDF 
     8. Aprobar Firma
-    9.
-
+    9. Mis solicitudes pendientes
+    10. Listado de firmas pendientes en una solicitud
+    11. Listado de firmas aprobadas en una solicitud
+    12. Mi historico de firmas
+    13. Test api
     ''')
 
     option = input()
@@ -88,3 +91,57 @@ while option != '0' :
         approve_signature(request_id)
         print("Firma aprobada")
     
+    if option == '9':
+        user_id = int(input('User ID: '))
+
+        request_signature_users = get_list_signature_request_user_by_user_id_and_signed(user_id, False)
+        print('Request ID || Request Signature ID || Subject')
+        for request_signature_user in request_signature_users:
+            print(
+                request_signature_user.signature_request.id, 
+                request_signature_user.id, 
+                request_signature_user.signature_request.subject
+            )
+
+    if option == '10':
+        request_id = int(input('Request ID: '))
+
+        request_signature_users = get_list_signature_request_user_by_request_id_and_signed(request_id=request_id, signed=False)
+        print('Request ID || Request Signature ID || Subject || User for signed')
+        for request_signature_user in request_signature_users:
+            print(
+                request_signature_user.signature_request.id, 
+                request_signature_user.id, 
+                request_signature_user.signature_request.subject,
+                request_signature_user.user.name
+            )
+    
+    if option == '11':
+        request_id = int(input('Request ID: '))
+
+        request_signature_users = get_list_signature_request_user_by_request_id_and_signed(request_id=request_id, signed=True)
+        print('Request ID || Request Signature ID || Subject || User for signed')
+        for request_signature_user in request_signature_users:
+            print(
+                request_signature_user.signature_request.id, 
+                request_signature_user.id, 
+                request_signature_user.signature_request.subject,
+                request_signature_user.user.name
+            )
+    
+    if option == '12':
+        user_id = int(input('User ID: '))
+
+        request_signature_users = get_list_signature_request_user_by_user_id_and_signed(user_id, True)
+        print('Request ID || Request Signature ID || Date Signed')
+        for request_signature_user in request_signature_users:
+            print(
+                request_signature_user.signature_request.id, 
+                request_signature_user.id, 
+                request_signature_user.signature_request.subject, 
+                request_signature_user.signature_date
+            )
+    
+    if option == '13':
+        image = input('Image path: ')
+        print(validate_signature(image))
