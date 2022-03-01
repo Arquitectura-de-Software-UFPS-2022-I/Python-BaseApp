@@ -1,5 +1,5 @@
 
-from signaturelib.services import validate_signature, approve_signature, get_file, get_file_pdf, get_request_signature_by_user, list_users, register_request_signature_user,register_user,get_user,insert_signature,insert_pdf,register_request_signature
+from signaturelib.services import get_user_login, validate_signature, approve_signature, get_file_pdf, get_request_signature_by_user, list_users, register_request_signature_user,register_user,get_user,insert_signature,register_request_signature
 import os,time
 
 option = '5'
@@ -39,23 +39,26 @@ while option != '0' :
     if option == '3':
         username = input('Username: ')
         password = input('Password: ')
-        user = get_user(username,password)
+        user = get_user_login(username, password)
         print(user)
     
     if option == '4':
         doc = input('Document path: ')
         image = open(doc,'rb')
-        validate_signature(input("BASE 64:"))
-        print(type(image))        
+
+        #if validate_signature(input("BASE 64:")):
         user_id = int(input('User ID: '))
-        insert_signature(user_id,image)
+        insert_signature(user_id, image.name, image.read())
+        #else:
+        #    print("El archivo no corresponde a una firma")
     
     if option == '5':
         doc = input('Document path: ')
         pdf = open(doc,'rb')        
         user_id = int(input('User ID: '))
-        file = insert_pdf(pdf)
-        register_request_signature(user_id,file.id,'Tema generico')
+        subject = input("Subject: ")
+
+        register_request_signature(user_id, pdf.name, pdf.read(), subject)
 
     if option == '6':
         request_id = int(input('Request ID: '))
@@ -63,7 +66,7 @@ while option != '0' :
         pos_x = int(input('Pos X: '))
         pos_y = int(input('Pos Y: '))
         num_page = int(input('Num Page: '))
-        register_request_signature_user(request_id,user_id,pos_x,pos_y,num_page)
+        register_request_signature_user(request_id, user_id, pos_x, pos_y, num_page)
 
     if option == '7' :
         
@@ -76,6 +79,9 @@ while option != '0' :
         print(" Seleccione una solicitud")
         request_id = int(input())
         pdf = get_file_pdf(request_id)
+
+        with open('doc_firmado.pdf', 'wb') as f:
+            f.write(pdf)
         
     if option == '8':
         request_id = int(input('Request ID: '))
