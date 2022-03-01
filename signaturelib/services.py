@@ -1,8 +1,7 @@
-from email.encoders import encode_base64
 import os, base64
 from typing import List
 from signaturelib.model import SessionBD,User,File,Signature_request,Signature_request_user
-import io, fitz , json, smtplib, datetime, requests
+import fitz , smtplib, datetime, requests
 
 sessionbd = SessionBD()
 session = sessionbd.get_session()

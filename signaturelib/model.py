@@ -1,5 +1,3 @@
-from click import echo
-from flask import session
 from sqlalchemy import create_engine, orm
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
