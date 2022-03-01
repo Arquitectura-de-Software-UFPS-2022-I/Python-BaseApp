@@ -1,5 +1,5 @@
 
-from signaturelib.services import get_file, get_file_pdf, get_request_signature_by_user, list_users, register_request_signature_user,register_user,get_user,insert_signature,insert_pdf,register_request_signature
+from signaturelib.services import approve_signature, get_file, get_file_pdf, get_request_signature_by_user, list_users, register_request_signature_user,register_user,get_user,insert_signature,insert_pdf,register_request_signature
 import os,time
 
 option = '5'
@@ -7,13 +7,15 @@ option = '5'
 while option != '0' : 
      
     print('''
-    1. Lists all users \n
-    2. Register a new user \n
-    3. Log in \n
+    1. Lists all users 
+    2. Register a new user 
+    3. Log in 
     4. Insert signature 
-    5. Ingresar PDF \n
-    6. Solicitar Firma \n
-    7. Generar PDF \n
+    5. Ingresar PDF 
+    6. Solicitar Firma 
+    7. Generar PDF 
+    8. Aprobar Firma
+
     ''')
 
     option = input()
@@ -40,13 +42,15 @@ while option != '0' :
         print(user)
     
     if option == '4':
-        image = open('firma.png','rb')
+        doc = input('Document path: ')
+        image = open(doc,'rb')
         print(type(image))        
         user_id = int(input('User ID: '))
         insert_signature(user_id,image)
     
     if option == '5':
-        pdf = open('doc2.pdf','rb')        
+        doc = input('Document path: ')
+        pdf = open(doc,'rb')        
         user_id = int(input('User ID: '))
         file = insert_pdf(pdf)
         register_request_signature(user_id,file.id,'Tema generico')
@@ -71,4 +75,8 @@ while option != '0' :
         request_id = int(input())
         pdf = get_file_pdf(request_id)
         
+    if option == '8':
+        request_id = int(input('Request ID: '))
+        approve_signature(request_id)
+        print("Firma aprobada")
     
