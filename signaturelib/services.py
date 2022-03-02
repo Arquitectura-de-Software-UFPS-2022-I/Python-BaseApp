@@ -8,6 +8,7 @@ session = sessionbd.get_session()
 
 def register_user(name: str, email: str, username: str, password: str) -> User:
     """
+    Requerimiento 1
     Registra un nuevo usuario {table_name=User}
 
     :name: str, nombre del usuario
@@ -26,6 +27,7 @@ def register_user(name: str, email: str, username: str, password: str) -> User:
 
 def validate_signature(image: str) -> bool:
     """
+    Requerimiento 4
     Valida si la imagen efectivamente corresponde a una firma
 
     :image: str, ruta de la imagen a verificar
@@ -60,6 +62,7 @@ def list_users() -> list[User]:
 
 def get_user_login(username: str, password: str) -> User:
     """
+    Requerimiento 2
     Obtiene un usuario {table_name=User} dado el username y password
 
     :username: str, username del usuario
@@ -73,10 +76,11 @@ def get_user_login(username: str, password: str) -> User:
 
 def register_request_signature(user_id: int, name_file: str, file: bytes, subject: str) -> Signature_request:
     """
+    Requerimiento 5
     Registra una solicitud de firma asociando su respectivo documento {table_name=Signature_request}
 
     :user_id: int, id del usuario que registra la solicitud
-    :file: bytes, archivo en formato de bytes al cual se asociara con la solicitud
+    :name_file: str, ruta del archivo PDF
     :subject: str, descripcion de la solicitud, este mismo sera enviado como Asunto en el email
     cuando el usuario propietario le solicite a otro usuario su firma
 
@@ -104,6 +108,7 @@ def get_request_signature_by_user(user_id: int) -> list[Signature_request]:
 
 def register_request_signature_user(request_id: int, user_id: int, pos_x: int, pos_y: int, num_page: int) -> Signature_request_user:
     """
+    Requerimiento 7
     Registra una solicitud de firma {table_name=Signature_request_user}
     y enviara un email para notificar al usuario que se le solicito firmar
 
@@ -151,6 +156,7 @@ def insert_file(name_file: str, file: bytes) -> File:
 
 def insert_signature(user_id: int, name_file: str, image: bytes) -> User:
     """
+    Requerimiento 3
     Registra la firma y la asocia con su respectivo usuario
 
     :user_id: int, usuario que registra la firma
@@ -224,6 +230,7 @@ def send_email(user_origin_id: int, user_destination_id: int, request_id: int) -
 
 def approve_signature(request_user_signature_id: int) -> bool:
     """
+    Requerimiento 8
     Aprueba la solicitud de firma dada a un usuario
 
     :request_user_signature_id: int, id de la solicitud de firma asociada al usuario que se
@@ -244,12 +251,17 @@ def approve_signature(request_user_signature_id: int) -> bool:
 
 def get_file_pdf(request_id: int) -> bytes:
     """
+    Requerimiento 9
     Retorna el documento firmado por los usuarios que han aprobado su solicitud de firma
     asociada al solicitud registrada por el propietario
 
     :request_id: int, id de la solicitud del propietario
 
     :return: bytes, documento ya firmado en formato de bytes
+
+    Nota: Cualquier excepcion que produzca este metodo sera si o si debido a dos factores:
+    1. Las posiciones X y/o Y son mayores al ancho o alto respectivamente
+    2. El numero de pagina no existe
     """
 
     request_users_signature = session.query(Signature_request_user).filter_by(request_id=request_id, signed=1).all()
@@ -267,7 +279,7 @@ def get_file_pdf(request_id: int) -> bytes:
             outfile.write(signature)
         signature = open("signature.png", "rb").read()
 
-        image_rectangle = fitz.Rect(20, 20, 200, 200)
+        image_rectangle = fitz.Rect(request.pos_x, request.pos_y, request.pos_x+100, request.pos_y+100)
         os.remove('signature.png')
         num_page = file_handle[request.num_page-1]
         num_page.insert_image(image_rectangle, stream=signature)
@@ -287,6 +299,7 @@ def get_file_pdf(request_id: int) -> bytes:
     
 def get_list_signature_request_user_by_user_id_and_signed(user_id: int, signed: bool) -> List[Signature_request_user]:
     """
+    Requerimiento 9 y 12
     Lista las solicitudes de firmas que le han solicitado al usuario
 
     :user_id: int, id del usuario al cual le han solicitado firmas
@@ -303,6 +316,7 @@ def get_list_signature_request_user_by_user_id_and_signed(user_id: int, signed: 
 
 def get_list_signature_request_user_by_request_id_and_signed(request_id: int, signed: bool) -> List[Signature_request_user]:
     """
+    Requerimiento 10 y 11
     Lista las solicitudes de firmas asociadas a una solicitud
 
     :request_id: int, id de la solicitud por la cual se desea buscar firmas aprobadas o pendientes
