@@ -150,7 +150,7 @@ def insert_file(name_file: str, file: str) -> File:
     :return: File object
     """
 
-    return file_dao.create(file=file, name=name_file)
+    return file_dao.create(file,name_file)
 
 
 def insert_signature(user_id: int, name_file: str, image: str) -> User:
