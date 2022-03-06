@@ -1,7 +1,6 @@
 README.md
 setup.py
 signaturelib/__init__.py
-signaturelib/model.py
 signaturelib/services.py
 signaturelib.egg-info/PKG-INFO
 signaturelib.egg-info/SOURCES.txt

@@ -1,4 +1,1 @@
-sqlalchemy
-pymysql
-pymupdf
 requests
