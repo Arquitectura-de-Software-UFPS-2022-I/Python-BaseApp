@@ -1,10 +1,19 @@
 import os, base64
 from typing import List
-from signaturelib.model import SessionBD,User,File,Signature_request,Signature_request_user
-import fitz , smtplib, datetime, requests
+from .model.dao.user_dao import UserDAO
+from .model.dao.signature_request_dao import SignatureRequestDAO
+from .model.dao.signature_request_user_dao import SignatureRequestUserDAO
+from .model.dao.file_dao import FileDAO
 
-sessionbd = SessionBD()
-session = sessionbd.get_session()
+
+from .model.dto.model_dto import SignatureRequest, SignatureRequestUser, User, File
+
+urlBase = 'http://52.240.59.172:8000'
+
+user_dao = UserDAO(urlBase)
+signature_request_dao = SignatureRequestDAO(urlBase)
+signature_request_user_dao = SignatureRequestUserDAO(urlBase)
+file_dao = FileDAO(urlBase)
 
 def register_user(name: str, email: str, username: str, password: str) -> User:
     """
@@ -18,11 +27,10 @@ def register_user(name: str, email: str, username: str, password: str) -> User:
 
     :return: User object
     """
-    user = User(name=name, email=email, username=username, password=password)
-    session.add(user)
-    session.commit()
+    user = User(full_name=name, email=email, username=username, password=password)
     
-    return user
+    
+    return user_dao.create(user)
 
 
 def validate_signature(image: str) -> bool:
@@ -56,8 +64,7 @@ def list_users() -> list[User]:
     :return: [] lista de usuarios
     """
 
-    users = session.query(User).all()
-    return users
+    return user_dao.get_all()
 
 
 def get_user_login(username: str, password: str) -> User:
@@ -71,10 +78,9 @@ def get_user_login(username: str, password: str) -> User:
     :return: User object
     """
 
-    user = session.query(User).filter_by(username=username,password=password).first()
-    return user
+    return user_dao.get_by_username_and_password(username, password)
 
-def register_request_signature(user_id: int, name_file: str, file: bytes, subject: str) -> Signature_request:
+def register_request_signature(user_id: int, name_file: str, file: str, subject: str) -> SignatureRequest:
     """
     Requerimiento 5
     Registra una solicitud de firma asociando su respectivo documento {table_name=Signature_request}
@@ -87,13 +93,12 @@ def register_request_signature(user_id: int, name_file: str, file: bytes, subjec
     :return: Signature_request object
     """
     saved_file = insert_file(name_file, file)
-    request_signature = Signature_request(user_id=user_id, document_id=saved_file.id, subject=subject)
-    session.add(request_signature)
-    session.commit()
+    
+    request_signature = SignatureRequest(user = user_id, document =saved_file.id, subject= subject)
+ 
+    return signature_request_dao.create(request_signature)
 
-    return request_signature
-
-def get_request_signature_by_user(user_id: int) -> list[Signature_request]:
+def get_request_signature_by_user(user_id: int) -> list[SignatureRequest]:
     """
     Obtiene la lista de solicitudes por documento {table_name=Signature_request} 
     que un usuario ha realizado
@@ -103,10 +108,10 @@ def get_request_signature_by_user(user_id: int) -> list[Signature_request]:
     :return: [] lista de solicitudes por documento
     """
 
-    request_signatures = session.query(Signature_request).filter_by(user_id=user_id).all()
-    return request_signatures
+    
+    return signature_request_dao.get_by_user(user_id)
 
-def register_request_signature_user(request_id: int, user_id: int, pos_x: int, pos_y: int, num_page: int) -> Signature_request_user:
+def register_request_signature_user(request_id: int, user_id: int, pos_x: int, pos_y: int, num_page: int) -> SignatureRequestUser:
     """
     Requerimiento 7
     Registra una solicitud de firma {table_name=Signature_request_user}
@@ -120,14 +125,10 @@ def register_request_signature_user(request_id: int, user_id: int, pos_x: int, p
 
     :return: Signature_request_user object
     """
-    signature_request_user = Signature_request_user(request_id=request_id, user_id=user_id, pos_x=pos_x, pos_y=pos_y, num_page=num_page)
-    session.add(signature_request_user)
-    session.commit()
+    signature_request_user = SignatureRequestUser(request=request_id, user=user_id, pos_x=pos_x, pos_y=pos_y, num_page=num_page)
 
-    request_signature = get_signature_request(request_id)
-    send_email(user_origin_id=request_signature.user_id, user_destination_id=user_id, request_id=request_id)
 
-    return signature_request_user
+    return signature_request_user_dao.create(signature_request_user)
 
 
 def list_files() -> list[File]:
@@ -136,11 +137,10 @@ def list_files() -> list[File]:
 
     :return: File object
     """
-    files = session.query(File).all()
-    return files
+    return file_dao.get_all()
 
 
-def insert_file(name_file: str, file: bytes) -> File:
+def insert_file(name_file: str, file: str) -> File:
     """
     Metodo generico para el registro de archivos {table_name=File}.
     Su proposito es modularizar el registro de firmas y pdf's
@@ -149,12 +149,13 @@ def insert_file(name_file: str, file: bytes) -> File:
 
     :return: File object
     """
-    file = File(file=file, name=name_file) 
-    session.add(file)
-    session.commit()
-    return file
 
-def insert_signature(user_id: int, name_file: str, image: bytes) -> User:
+    file = File(file=file, name=name_file) 
+
+    return file_dao.create(file)
+
+
+def insert_signature(user_id: int, name_file: str, image: str) -> User:
     """
     Requerimiento 3
     Registra la firma y la asocia con su respectivo usuario
@@ -164,11 +165,12 @@ def insert_signature(user_id: int, name_file: str, image: bytes) -> User:
 
     :return: User_object
     """
-    user = session.query(User).filter_by(id=user_id).first()
-    user.signature_id =  insert_file(name_file, image).id
-    session.commit()
+    user = user_dao.get_by_id(user_id)
+    
+    user.signature =  insert_file(name_file, image).id
 
-    return user
+    return user_dao.update(user)
+
 
 def get_user(user_id: int) -> User:
     """
@@ -178,8 +180,8 @@ def get_user(user_id: int) -> User:
 
     :return: User object
     """
-    user = session.query(User).filter_by(id=user_id).first()
-    return user
+    return user_dao.get_by_id(user_id)
+
 
 def get_file(file_id: int) -> File:
     """
@@ -189,10 +191,10 @@ def get_file(file_id: int) -> File:
 
     :return: File object
     """
-    file = session.query(File).filter_by(id=file_id).first()
-    return file
+    return file_dao.get_by_id(file_id)
 
-def get_signature_request(request_id: int) -> Signature_request:
+
+def get_signature_request(request_id: int) -> SignatureRequest:
     """
     Busca una solicitud dado su id {table_name=Signature_request}
 
@@ -200,32 +202,8 @@ def get_signature_request(request_id: int) -> Signature_request:
 
     :return: Signature_request object
     """
-    request = session.query(Signature_request).filter_by(id=request_id).first()
-    return request
+    return signature_request_dao.get_by_id(request_id)
 
-def send_email(user_origin_id: int, user_destination_id: int, request_id: int) -> None:
-    """
-    Envia un email notificando al usuario que se le ha solicitado su firma
-
-    :user_origin_id: int, id del usuario propietario de la solicitud
-    :user_destination_id: int, id del usuario al que se le solicita la firma
-    :request_id: int, id de la solicitud del propietario
-    """
-    user_origin = get_user(user_origin_id)
-    user_destination = get_user(user_destination_id)
-    request = get_signature_request(request_id)
-    file_pdf = get_file(request.document_id)
-    
-
-    msg = "Se le notifica que el usuario "+user_origin.name+" ha solicitado su firma para el documento "+file_pdf.name+"."
-    subject = request.subject
-
-    msg ='subject: {}\n\n{}'.format(subject, msg)
-    server = smtplib.SMTP('smtp.gmail.com', 587)
-    server.starttls()
-    server.login("softwarearchitecture9@gmail.com", "architecture$9")
-    server.sendmail("softwarearchitecture9@gmail.com", user_destination.email, msg)
-    server.quit()
     
 
 def approve_signature(request_user_signature_id: int) -> bool:
@@ -240,11 +218,10 @@ def approve_signature(request_user_signature_id: int) -> bool:
     El retorno se debe a que quizas el usuario este intentando firmar nuevamente
     el documento, entonces retornara False si ya se encontraba firmado
     """
-    request_users_signature = session.query(Signature_request_user).filter_by(id=request_user_signature_id).first()
+    request_users_signature = signature_request_user_dao.get_by_id(request_user_signature_id)
     if request_users_signature.signed != 1:
         request_users_signature.signed = 1
-        request_users_signature.signature_date = datetime.datetime.now()
-        session.commit()
+        signature_request_user_dao.update(request_users_signature)
         return True
     return False
     
@@ -264,40 +241,12 @@ def get_file_pdf(request_id: int) -> bytes:
     2. El numero de pagina no existe
     """
 
-    request_users_signature = session.query(Signature_request_user).filter_by(request_id=request_id, signed=1).all()
-    signature_request = get_signature_request(request_id)
-    pdf = get_file(signature_request.document_id).file
+    url = '/api/v1/generate_pdf/' + str(request_id)+ '/'
+    response = requests.get(url)
+    return response.content
+
     
-    with open('temp.pdf', 'wb') as outfile:
-        outfile.write(pdf)
-
-    file_handle = fitz.open('temp.pdf')
-    for request in request_users_signature:
-        signature = request.user.signature.file
-
-        with open('signature.png', 'wb') as outfile:
-            outfile.write(signature)
-        signature = open("signature.png", "rb").read()
-
-        image_rectangle = fitz.Rect(request.pos_x, request.pos_y, request.pos_x+100, request.pos_y+100)
-        os.remove('signature.png')
-        num_page = file_handle[request.num_page-1]
-        num_page.insert_image(image_rectangle, stream=signature)
-
-    file_handle.save('doc_firmado.pdf')
-    file_handle.close()
-
-    os.remove('temp.pdf')
-    
-    doc_file = open("doc_firmado.pdf", "rb")
-    doc_bytes = doc_file.read()
-    doc_file.close()
-
-    os.remove("doc_firmado.pdf")
-
-    return doc_bytes
-    
-def get_list_signature_request_user_by_user_id_and_signed(user_id: int, signed: bool) -> List[Signature_request_user]:
+def get_list_signature_request_user_by_user_id_and_signed(user_id: int, signed: bool) -> List[SignatureRequestUser]:
     """
     Requerimiento 9 y 12
     Lista las solicitudes de firmas que le han solicitado al usuario
@@ -311,10 +260,17 @@ def get_list_signature_request_user_by_user_id_and_signed(user_id: int, signed: 
         Las pendientes son el requerimiento 9
         Las aprobadas son el requerimiento 12, es decir el historico
     """
-    signature_request_users = session.query(Signature_request_user).filter_by(user_id=user_id, signed=1 if signed else 0).all()
+    
+    signature_request_users = signature_request_user_dao.get_by_user_id(user_id)
+
+    for rq in signature_request_users:
+        if rq.signed != signed:
+            signature_request_users.remove(rq)
+
+    
     return signature_request_users
 
-def get_list_signature_request_user_by_request_id_and_signed(request_id: int, signed: bool) -> List[Signature_request_user]:
+def get_list_signature_request_user_by_request_id_and_signed(request_id: int, signed: bool) -> List[SignatureRequestUser]:
     """
     Requerimiento 10 y 11
     Lista las solicitudes de firmas asociadas a una solicitud
@@ -328,5 +284,11 @@ def get_list_signature_request_user_by_request_id_and_signed(request_id: int, si
         Las pendientes son el requerimiento 10
         Las aprobadas son el requerimiento 11
     """
-    signature_request_users = session.query(Signature_request_user).filter_by(request_id=request_id, signed=1 if signed else 0).all()
+    signature_request_users = signature_request_user_dao.get_by_signature_request(request_id)
+
+    for rq in signature_request_users:
+        if rq.signed != signed:
+            signature_request_users.remove(rq)
+    
     return signature_request_users
+            

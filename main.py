@@ -29,7 +29,7 @@ while option != '0' :
         users = list_users()
         os.system('cls')
         for user in users:
-            print(user.name)
+            print(user.full_name)
         
 
     if option == '2':
