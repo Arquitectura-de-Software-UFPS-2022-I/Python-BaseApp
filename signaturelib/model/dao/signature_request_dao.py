@@ -12,10 +12,11 @@ class SignatureRequestDAO :
         url = '/api/v1/signature_requests/'
 
         data = signature_request.to_json()
+        
         headers = {'Content-Type': 'application/json'}
-        response = requests.post(self.baseUrl+url, data=data, headers=headers)
+        response = requests.post(self.baseUrl+url, json=data, headers=headers)
 
-        if response.status_code == 200 :
+        if response.status_code == 200 or response.status_code == 201 :
             signature_request = SignatureRequest()
             signature_request.from_json(response.json())
             return signature_request

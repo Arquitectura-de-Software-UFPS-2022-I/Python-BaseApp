@@ -61,7 +61,7 @@ class User():
     
 
 class SignatureRequest():
-    def __init__(self, id, subject, document,user,create_date):
+    def __init__(self, id = None, subject = None, document = None,user = None,create_date = None):
         self.id = id
         self.subject = subject
         self.document = document
@@ -91,7 +91,7 @@ class SignatureRequest():
 
 
 class SignatureRequestUser():
-    def __init__(self, id, request, user, pos_x, pos_y, num_page, signed, signature_date, create_date):
+    def __init__(self, id = None, request = None, user = None, pos_x = None, pos_y = None, num_page = None, signed = False , signature_date = None, created_date = None):
         self.id = id
         self.request = request
         self.user = user
@@ -100,7 +100,7 @@ class SignatureRequestUser():
         self.num_page = num_page
         self.signed = signed
         self.signature_date = signature_date
-        self.create_date = create_date
+        self.created_date = created_date
     
     def from_json(self,json):
         self.id = json['id']
@@ -111,7 +111,7 @@ class SignatureRequestUser():
         self.num_page = json['num_page']
         self.signed = json['signed']
         self.signature_date = json['signature_date']
-        self.create_date = json['create_date']
+        self.created_date = json['created_date']
         return self
 
     def to_json(self):
@@ -124,9 +124,9 @@ class SignatureRequestUser():
             'num_page': self.num_page,
             'signed': self.signed,
             'signature_date': self.signature_date,
-            'create_date': self.create_date
+            'created_date': self.created_date
         }
 
     def __str__(self):
-        return f'{self.id} - {self.request} - {self.user} - {self.pos_x} - {self.pos_y} - {self.num_page} - {self.signed} - {self.signature_date} - {self.create_date}'
+        return f'{self.id} - {self.request} - {self.user} - {self.pos_x} - {self.pos_y} - {self.num_page} - {self.signed} - {self.signature_date} - {self.created_date}'
     

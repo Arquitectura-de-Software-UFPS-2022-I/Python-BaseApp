@@ -10,13 +10,14 @@ class SignatureRequestUserDAO :
         self.baseUrl = baseUrl
     
     def create(self, signature_request: SignatureRequestUser) -> SignatureRequestUser:
-        url = '/api/v1/signature_requests/'
+        url = '/api/v1/signature_request_users/'
 
         data = signature_request.to_json()
+        print(data)
         headers = {'Content-Type': 'application/json'}
-        response = requests.post(self.baseUrl+url, data=data, headers=headers)
+        response = requests.post(self.baseUrl+url, json=data, headers=headers)
 
-        if response.status_code == 200 :
+        if response.status_code == 200 or response.status_code == 201 :
             signature_request = SignatureRequestUser()
             signature_request.from_json(response.json())
             return signature_request
@@ -41,7 +42,7 @@ class SignatureRequestUserDAO :
             return None
     
     def get_by_id(self, id) -> SignatureRequestUser:
-        url = '/api/v1/signature_requests/'+str(id)+'/'
+        url = '/api/v1/signature_request_users/'+str(id)+'/'
         headers = {'Content-Type': 'application/json'}
         response = requests.get(self.baseUrl+url, headers=headers)
 
@@ -54,11 +55,12 @@ class SignatureRequestUserDAO :
             return None
         
     def update(self, signature_request: SignatureRequestUser) -> SignatureRequestUser:
-        url = '/api/v1/signature_requests/'+str(signature_request.id)+'/'
+        url = '/api/v1/signature_request_users/'+str(signature_request.id)+'/'
 
         data = signature_request.to_json()
+        print(data)
         headers = {'Content-Type': 'application/json'}
-        response = requests.put(self.baseUrl+url, data=data, headers=headers)
+        response = requests.put(self.baseUrl+url, json=data, headers=headers)
 
         if response.status_code == 200 :
             signature_request = SignatureRequestUser()
@@ -82,7 +84,7 @@ class SignatureRequestUserDAO :
 
     
     def get_by_signature_request(self, signature_request_id) -> List[SignatureRequestUser]:
-        url = '/api/v1/signature_requests/signature_request/'+str(signature_request_id)+'/'
+        url = '/api/v1/signature_request_users_by_request/'+str(signature_request_id)+'/'
         headers = {'Content-Type': 'application/json'}
         response = requests.get(self.baseUrl+url, headers=headers)
 
@@ -98,7 +100,7 @@ class SignatureRequestUserDAO :
             return None
     
     def get_by_user_id(self, user_id):
-        url = '/api/v1/signature_requests/user/'+str(user_id)+'/'
+        url = '/api/v1/signature_request_users_by_user/'+str(user_id)+'/'
         headers = {'Content-Type': 'application/json'}
         response = requests.get(self.baseUrl+url, headers=headers)
 

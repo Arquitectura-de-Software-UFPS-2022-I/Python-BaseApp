@@ -19,10 +19,9 @@ class FileDAO :
             'name': name_file
         }
         file = {'file': open(path_file, 'rb')}
-        print(os.path.exists(path_file))
         response = requests.post(self.baseUrl+url, data=data, files=file)
 
-        if response.status_code == 200 :
+        if response.status_code == 200 or response.status_code == 201 :
             file = File()
             file.from_json(response.json())
             return file

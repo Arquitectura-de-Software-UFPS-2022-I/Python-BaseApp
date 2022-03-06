@@ -12,7 +12,7 @@ class UserDAO() :
         data = user.to_json()
         response = requests.post(self.baseUrl+url, headers=headers, json=data)
 
-        if response.status_code == 200 :
+        if response.status_code == 200 or response.status_code == 201 :
             user = User()
             user.from_json(response.json())
             return user
@@ -21,7 +21,7 @@ class UserDAO() :
             return None
         
     def update(self,user: User) -> User:
-        url = '/api/v1/users/'
+        url = '/api/v1/users/'+str(user.id)+'/'
         headers = {'Content-Type': 'application/json'}
         data = user.to_json()
         response = requests.put(self.baseUrl+url, headers=headers, json=data)

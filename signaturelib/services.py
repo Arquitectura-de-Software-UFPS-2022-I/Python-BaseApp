@@ -217,8 +217,8 @@ def approve_signature(request_user_signature_id: int) -> bool:
     el documento, entonces retornara False si ya se encontraba firmado
     """
     request_users_signature = signature_request_user_dao.get_by_id(request_user_signature_id)
-    if request_users_signature.signed != 1:
-        request_users_signature.signed = 1
+    if not request_users_signature.signed :
+        request_users_signature.signed = True
         signature_request_user_dao.update(request_users_signature)
         return True
     return False
@@ -239,8 +239,9 @@ def get_file_pdf(request_id: int) -> bytes:
     2. El numero de pagina no existe
     """
 
-    url = '/api/v1/generate_pdf/' + str(request_id)+ '/'
+    url = urlBase+'/api/v1/generate_pdf/' + str(request_id)+ '/'
     response = requests.get(url)
+
     return response.content
 
     
