@@ -4,7 +4,7 @@ from .model.dao.user_dao import UserDAO
 from .model.dao.signature_request_dao import SignatureRequestDAO
 from .model.dao.signature_request_user_dao import SignatureRequestUserDAO
 from .model.dao.file_dao import FileDAO
-
+import requests
 
 from .model.dto.model_dto import SignatureRequest, SignatureRequestUser, User, File
 
