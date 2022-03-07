@@ -4,7 +4,7 @@ from .model.dao.user_dao import UserDAO
 from .model.dao.signature_request_dao import SignatureRequestDAO
 from .model.dao.signature_request_user_dao import SignatureRequestUserDAO
 from .model.dao.file_dao import FileDAO
-
+import requests
 
 from .model.dto.model_dto import SignatureRequest, SignatureRequestUser, User, File
 
@@ -150,9 +150,7 @@ def insert_file(name_file: str, file: str) -> File:
     :return: File object
     """
 
-    file = File(file=file, name=name_file) 
-
-    return file_dao.create(file)
+    return file_dao.create(file,name_file)
 
 
 def insert_signature(user_id: int, name_file: str, image: str) -> User:
@@ -219,8 +217,8 @@ def approve_signature(request_user_signature_id: int) -> bool:
     el documento, entonces retornara False si ya se encontraba firmado
     """
     request_users_signature = signature_request_user_dao.get_by_id(request_user_signature_id)
-    if request_users_signature.signed != 1:
-        request_users_signature.signed = 1
+    if not request_users_signature.signed :
+        request_users_signature.signed = True
         signature_request_user_dao.update(request_users_signature)
         return True
     return False
@@ -241,8 +239,9 @@ def get_file_pdf(request_id: int) -> bytes:
     2. El numero de pagina no existe
     """
 
-    url = '/api/v1/generate_pdf/' + str(request_id)+ '/'
+    url = urlBase+'/api/v1/generate_pdf/' + str(request_id)+ '/'
     response = requests.get(url)
+
     return response.content
 
     
